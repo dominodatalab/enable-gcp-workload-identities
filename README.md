@@ -307,16 +307,19 @@ and kubectl access to the cluster.
 
 ```shell
 gcloud iam service-accounts add-iam-policy-binding ${GCP_MASTER_SVC_ACCOUNT}  --project $gcp_project_id --role roles/iam.workloadIdentityUser --member "serviceAccount:${GCP_PROJECT_ID}.svc.id.goog[${platform_namespace}/gcpworkloadidentity]" \
-          --condition condition="expression=request.auth.claims.google.providerId=='https://container.googleapis.com/v1/projects/domino-eng-platform-dev/locations/${GCP_PROJECT_LOCATION}/clusters/${GCP_GKE_ID}',description=single-cluster-acl,title=single-cluster-acl" 
-kubectl annotate serviceaccount gcpworkloadidentity --namespace ${platform_namespace}   iam.gke.io/gcp-service-account=${GCP_MASTER_SVC_ACCOUNT} \
+          --condition "expression=request.auth.claims.google.providerId=='https://container.googleapis.com/v1/projects/domino-eng-platform-dev/locations/${GCP_PROJECT_LOCATION}/clusters/${GCP_GKE_ID}',description=single-cluster-acl,title=single-cluster-acl" 
+kubectl annotate serviceaccount gcpworkloadidentity --namespace ${platform_namespace}   iam.gke.io/gcp-service-account=${GCP_MASTER_SVC_ACCOUNT}
 
 ```
 For example:
 
 ```shell
-gcloud iam service-accounts add-iam-policy-binding gcp-aes4085-gcr@domino-eng-platform-dev.iam.gserviceaccount.com     --role roles/iam.workloadIdentityUser     --member "serviceAccount:domino-eng-platform-dev.svc.id.goog[gcp-aes4085-platform/gcpworkloadidentity]" \
 gcloud iam service-accounts add-iam-policy-binding gcp-aes4085-gcr@domino-eng-platform-dev.iam.gserviceaccount.com     --role roles/iam.workloadIdentityUser     --member "serviceAccount:domino-eng-platform-dev.svc.id.goog[stevel5060-platform/gcpworkloadidentity]" \
+          --condition "expression=request.auth.claims.google.providerId=='https://container.googleapis.com/v1/projects/domino-eng-platform-dev/locations/us-west1/clusters/stevel5060',description=single-cluster-acl,title=single-cluster-acl" 
+
+kubectl annotate serviceaccount gcpworkloadidentity --namespace stevel5060-platform   iam.gke.io/gcp-service-account=gcp-aes4085-gcr@domino-eng-platform-dev.iam.gserviceaccount.com --overwrite
 ```
+
 
 This ensures that the service ${platform_namespace}/gcpworkloadidentity runs as the GCP Service Account with permissions to map 
 POD Service Accounts to other service accounts
