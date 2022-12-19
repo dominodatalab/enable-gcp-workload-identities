@@ -199,6 +199,59 @@ print(creds.service_account_email)
 
 ```
 
+## Running Localy
+
+1. Create a file in the root of the project called ./root/etc/keys/key.json and add the main service account key contents to this file
+2. Run the program `./enable-workload-identities-service/gcp-workload-identity/workload_identity_service.py` after setting the following environment variables
+- DEFAULT_PLATFORM_NS=stevel5060-platform
+- DEFAULT_COMPUTE_NS=stevel5060-compute
+- GCP_KEYS_PATH=/<PROJECT_ROOT_PATH>/enable-workload-identities-service/root/etc/keys/key.json;
+- DOMINO_USER_HOST=https://stevel5060.eng-platform-dev.domino.tech
+- GCP_PROJECT_ID=<GCP_PROJECT_ID>;
+- SSL_OFF=true
+- GCP_PROJECT_LOCATION=us-west1 
+- GCP_GKE_ID=<GCP_GKE_CLUSTER_ID>
+3. You can now call the endpoints-
+   - https://{{DOMINO_USER_HOST}}/api/organizations/v1/organizations
+   - http://127.0.0.1:6000/apply_service_account [POST]
+     Payload
+     ```json
+     {    
+      "domino_org" : "org1",
+      "run_id" : "6390bad2ddeb1e60b13bba10"
+      }
+     ```
+     The run_id owner's DOMINO_API_KEY needs to be passed as the http header `X-Domino-Api-Key`
+   - http://127.0.0.1:6000/reset_service_account
+     Payload
+     ```json
+     {    
+      "run_id" : "6390bad2ddeb1e60b13bba10"
+     }
+     ```
+     The run_id owner's DOMINO_API_KEY needs to be passed as the http header `X-Domino-Api-Key`
+   - http://127.0.0.1:6000/map_org_to_gcp_sa
+     Payload
+     ```json
+     {    
+    "domino_org" : "org3",
+    "gcp_sa" : "sw-aes-3@domino-eng-platform-dev.iam.gserviceaccount.com"
+     }
+    ```
+    The DOMIONO ADMIN's DOMINO_API_KEY needs to be passed as the http header `X-Domino-Api-Key`. This is a helper api endpoint to allow mapping of 
+    domino organizations to GCP Service Accounts. The alternative is for a K8s admin to update a config map mentioned below. This endpoint allows
+    mappings between orgs and gcp service accounts to be managed as first class domino citized instead of a K8s artifact.
+ 4. Test if the workload identity is mapped by running the following in you workspace terminal
+ ```shell
+    curl -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email
+    #Outputs the service account email
+ ```
+
+```shell
+    prompt> curl -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
+    #Outputs the token
+```
+
 ## Installation
 
 1. First build the image. The default values for the image repository and tag are
