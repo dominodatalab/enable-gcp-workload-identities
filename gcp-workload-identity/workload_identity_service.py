@@ -74,6 +74,8 @@ def apply_service_account() -> object:
         org = utils.get_user_default_org(domino_api_key,platform_ns)
     logger.debug(f'Run Id {run_id}')
     logger.debug(f'Org Id {org}')
+    #First remove existing service account
+    status, message = utils.remove_service_account(domino_api_key, run_id, compute_ns)
 
     status, message = utils.apply_service_account(domino_api_key,run_id,org,compute_ns,platform_ns)
     if status:
