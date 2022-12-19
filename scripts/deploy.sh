@@ -223,7 +223,7 @@ spec:
         - name: GCP_PROJECT_ID
           value: ${GCP_PROJECT_ID}
         - name: GCP_PROJECT_LOCATION
-          value: ${GCP_PROJECT_LOCATION}
+          value: ${GCP_REGION}
         - name: GCP_GKE_ID
           value: ${GCP_GKE_ID}
         ports:
