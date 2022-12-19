@@ -201,7 +201,7 @@ print(creds.service_account_email)
 
 ## Running Localy
 
-1. Create a file in the root of the project called ./root/etc/keys/key.json and add the main service account key contents to this file
+1. Create a file in the root of the project called `./root/etc/keys/key.json` and add the main service account key contents to this file
 2. Run the program `./enable-workload-identities-service/gcp-workload-identity/workload_identity_service.py` after setting the following environment variables
 ```
 - DEFAULT_PLATFORM_NS=stevel5060-platform
