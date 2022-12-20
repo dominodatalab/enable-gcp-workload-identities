@@ -20,6 +20,13 @@ def get_service():
     return service
 
 def add_iam_policy_binding(gcp_service_account,domino_compute_namespace,domino_service_account):
+    return update_iam_policy_binding(gcp_service_account,domino_compute_namespace,domino_service_account)
+
+def remove_iam_policy_binding(domino_service_account,gcp_service_account,domino_compute_namespace):
+    return update_iam_policy_binding(gcp_service_account,domino_compute_namespace,domino_service_account,False)
+
+
+def update_iam_policy_binding(gcp_service_account,domino_compute_namespace,domino_service_account,add=True):
     service = get_service()
     project_id =  os.environ.get('GCP_PROJECT_ID')
     project_location = os.environ.get('GCP_PROJECT_LOCATION',"")
@@ -28,56 +35,46 @@ def add_iam_policy_binding(gcp_service_account,domino_compute_namespace,domino_s
     # REQUIRED: The resource for which the policy is being specified.
     # See the operation documentation for the appropriate value for this field.
     resource = f'projects/{project_id}/serviceAccounts/{gcp_service_account}'  # TODO: Update placeholder value.
-
-    print(resource)
-    print(providerId)
     set_iam_policy_request_body = {"policy":
                                        {"bindings": [
-                                           {"members":
-                                                ["serviceAccount:domino-eng-platform-dev.svc.id.goog[domino-platform/test]"],
-                                                 "role": "roles/iam.workloadIdentityUser",
-                                                 "condition": {
-                                                    "title": f"single-cluster-acl-{domino_service_account}",
-                                                    "description": "single-cluster-acl",
-                                                    "expression": f"request.auth.claims.google.providerId=='{providerId}'",
-                                                }
-                                         }],
+                                           ],
                                         "version": 3
                                        }
 
                                  }
+    member = {"members":
+         [],
+     "role": "roles/iam.workloadIdentityUser",
+     "condition": {
+         "title": f"single-cluster-acl-domino_service_account",
+         "description": "single-cluster-acl",
+         "expression": f"request.auth.claims.google.providerId=='{providerId}'",
+        }
+     }
     s = f"serviceAccount:{project_id}.svc.id.goog[{domino_compute_namespace}/{domino_service_account}]"
-    set_iam_policy_request_body["policy"]["bindings"][0]["members"] = [s]
+    #set_iam_policy_request_body["policy"]["bindings"][0]["members"] = [s]
+    response = service.projects().serviceAccounts().getIamPolicy(resource=resource).execute()
+    if 'bindings' in response:
+        bindings = response['bindings']
+    else:
+        bindings = [member]
+    members = []
+    for r in bindings:
+        if r['role'].startswith('roles/iam.workloadIdentityUser'):
+            members = r['members']
+            break
+
+    if add:
+        members.append(s)
+    else:
+        members.remove(s)
+    member['members'] = members
+    set_iam_policy_request_body['policy']['bindings'].append(member)
+    #This might be a good time to do cleanup for workspaces that have terminated
+    #But this needs a domino token for admin or access to mongo which elevates the pod access control profile
     request = service.projects().serviceAccounts().setIamPolicy(resource=resource, body=set_iam_policy_request_body)
     response = request.execute()
     return response
-
-def remove_iam_policy_binding(domino_service_account,gcp_service_account,domino_compute_namespace):
-    service = get_service()
-    project_id =  os.environ.get('GCP_PROJECT_ID')
-
-
-    # REQUIRED: The resource for which the policy is being specified.
-    # See the operation documentation for the appropriate value for this field.
-    resource = f'projects/{project_id}/serviceAccounts/{gcp_service_account}'  # TODO: Update placeholder value.
-    print(resource)
-    set_iam_policy_request_body = {"policy":
-                                       {"bindings": [
-                                           {"members":
-                                                ["serviceAccount:domino-eng-platform-dev.svc.id.goog[domino-platform/test]"],
-                                             "role": "roles/iam.workloadIdentityUser"
-                                            }]}
-                                 }
-    member = f"serviceAccount:{project_id}.svc.id.goog[{domino_compute_namespace}/{domino_service_account}]"
-    set_iam_policy_request_body["policy"]["bindings"][0]["members"] = []
-    request = service.projects().serviceAccounts().getIamPolicy(resource=resource)
-    j = request.execute()
-    """Removes a  member from a role binding."""
-    binding = next(b for b in j["bindings"] if b["role"].startswith('roles/iam.workloadIdentityUser'))
-    if "members" in binding and member in binding["members"]:
-        binding["members"].remove(member)
-    request = service.projects().serviceAccounts().setIamPolicy(resource=resource, body= {"policy":j})
-    request.execute()
 
 
 

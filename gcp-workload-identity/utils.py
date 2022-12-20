@@ -131,8 +131,9 @@ def remove_service_account(domino_api_key,run_id,pod_namespace=DEFAULT_COMPUTE_N
         annotations = pod_svc_account_annotations(pod_service_account,pod_namespace)
         if 'iam.gke.io/gcp-service-account' in annotations:
             gcp_service_account = annotations['iam.gke.io/gcp-service-account']
-            gcp_utils.remove_iam_policy_binding(pod_service_account, gcp_service_account, pod_namespace)
-            annotate_pod_service_account(pod_service_account,None,pod_namespace)
+            if gcp_service_account:
+                gcp_utils.remove_iam_policy_binding(pod_service_account, gcp_service_account, pod_namespace)
+                annotate_pod_service_account(pod_service_account,None,pod_namespace)
             return True, f'GCP Service Account Workload Identity Removed'
         else:
             return False, f'GCP Service Account Workload Identity Could Not Be Removed. Possibly not a owner or no GSA mapped to Pod'
