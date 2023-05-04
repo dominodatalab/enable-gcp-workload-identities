@@ -3,6 +3,6 @@ kind: ConfigMap
 metadata:
   name: domino-org-gcp-svc-account-mapping
 data:
-  org1: sw-aes-1@domino-eng-platform-dev.iam.gserviceaccount.com
-  org2: sw-aes-2@domino-eng-platform-dev.iam.gserviceaccount.com
-  org3: sw-aes-3@domino-eng-platform-dev.iam.gserviceaccount.com
+  org1: sw-test-1@domino-eng-platform-dev.iam.gserviceaccount.com
+  org2: sw-test-2@domino-eng-platform-dev.iam.gserviceaccount.com
+  org3: sw-test-3@domino-eng-platform-dev.iam.gserviceaccount.com
